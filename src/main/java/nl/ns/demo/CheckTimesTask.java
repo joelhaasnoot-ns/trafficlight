@@ -62,7 +62,9 @@ public class CheckTimesTask extends TimerTask {
 
             };
             String responseBody = httpclient.execute(httpget, responseHandler);
-            result = new JsonParser().parse(responseBody).getAsJsonObject();
+            if (responseBody != null) {
+                result = new JsonParser().parse(responseBody).getAsJsonObject();
+            }
         } catch (ClientProtocolException e) {
             e.printStackTrace();
         } catch (IOException e) {
