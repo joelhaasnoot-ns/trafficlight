@@ -15,7 +15,7 @@ import org.joda.time.Period;
 import org.joda.time.format.ISOPeriodFormat;
 import org.joda.time.format.PeriodFormatter;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.TimerTask;
 
 /**
@@ -32,18 +32,21 @@ public class CheckTimesTask extends TimerTask {
     @Override
     public void run() {
         JsonObject js = getData();
+
+        DelayStatus status = DelayStatus.UNKNOWN;
         if (js != null) {
             int delayMinutes = calculateDelay(js);
             System.out.println("Got " + delayMinutes + " minutes of delay " );
+            status = determineStatus(delayMinutes);
         }
-
+        outputStatus(status);
     }
 
     private JsonObject getData() {
         JsonObject result = null;
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
-            HttpGet httpget = new HttpGet("http://localhost:8080/dvs/ut");
+            HttpGet httpget = new HttpGet("http://localhost:8080/dvs/"+this.station);
 
             ResponseHandler<String> responseHandler = new ResponseHandler<String>() {
 
@@ -84,5 +87,29 @@ public class CheckTimesTask extends TimerTask {
             delayMinutes += (delayPeriod.getHours() * 60) + delayPeriod.getMinutes();
         }
         return delayMinutes;
+    }
+
+    private DelayStatus determineStatus(int delayMinutes) {
+        if (delayMinutes < 30) {
+            return DelayStatus.SMALL;
+        } else if (delayMinutes < 60) {
+            return DelayStatus.MEDIUM;
+        } else {
+            return DelayStatus.HIGH;
+        }
+    }
+
+    private void outputStatus(DelayStatus status) {
+        PrintWriter writer = null;
+        try {
+            writer = new PrintWriter("/dev/ledborg", "UTF-8");
+            writer.print(status.getColorString());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } finally {
+            writer.close();
+        }
     }
 }
