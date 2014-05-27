@@ -1,32 +1,22 @@
 package nl.ns.demo;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
-import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.util.EntityUtils;
 import org.joda.time.Period;
 import org.joda.time.format.ISOPeriodFormat;
 import org.joda.time.format.PeriodFormatter;
-import org.joda.time.format.PeriodFormatterBuilder;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.TimerTask;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 /**
  * Created by joel on 27-5-14.
@@ -43,14 +33,8 @@ public class CheckTimesTask extends TimerTask {
     public void run() {
         JsonObject js = getData();
         if (js != null) {
-            PeriodFormatter p = ISOPeriodFormat.standard();
-            int vertragingMin = 0;
-            for (JsonElement element : js.getAsJsonArray("vertrekTijden")) {
-                JsonObject train = element.getAsJsonObject().get("trein").getAsJsonObject();
-                Period vertraging = p.parsePeriod(train.get("exacteVertrekVertraging").getAsString());
-                vertragingMin += (vertraging.getHours() * 60) + vertraging.getMinutes();
-            }
-            System.out.println("Got minutes of delay" + vertragingMin);
+            int delayMinutes = calculateDelay(js);
+            System.out.println("Got " + delayMinutes + " minutes of delay " );
         }
 
     }
@@ -88,5 +72,17 @@ public class CheckTimesTask extends TimerTask {
             }
         }
         return result;
+    }
+
+
+    private int calculateDelay(JsonObject js) {
+        PeriodFormatter p = ISOPeriodFormat.standard();
+        int delayMinutes = 0;
+        for (JsonElement element : js.getAsJsonArray("vertrekTijden")) {
+            JsonObject train = element.getAsJsonObject().get("trein").getAsJsonObject();
+            Period delayPeriod = p.parsePeriod(train.get("exacteVertrekVertraging").getAsString());
+            delayMinutes += (delayPeriod.getHours() * 60) + delayPeriod.getMinutes();
+        }
+        return delayMinutes;
     }
 }

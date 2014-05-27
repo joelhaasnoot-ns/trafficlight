@@ -11,7 +11,7 @@ public class TrafficLight {
 
     private void run() {
         Timer t = new Timer();
-        t.schedule(new CheckTimesTask("ut"), 5000);
+        t.scheduleAtFixedRate(new CheckTimesTask("ut"), 0, 5000);
     }
 
     public static void main(String [] args) {
