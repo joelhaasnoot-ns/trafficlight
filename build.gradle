@@ -5,6 +5,11 @@ sourceCompatibility = 1.5
 version = '1.0'
 
 mainClassName = "nl.ns.demo.TrafficLight"
+jar {
+    manifest {
+        attributes 'Main-Class': 'nl.ns.demo.TrafficLight'
+    }
+}
 
 repositories {
     mavenCentral()
